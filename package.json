@@ -1,0 +1,57 @@
+{
+  "name": "siyuan-note-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for SiYuan Note (思源笔记): search, read and write notebooks, documents and blocks over the SiYuan kernel API",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "bin": {
+    "siyuan-note-mcp": "lib/cli.js"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "prepare": "tsdown",
+    "start": "node lib/cli.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsdown": "^0.13.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Miles1994/siyuan-mcp.git"
+  },
+  "homepage": "https://github.com/Miles1994/siyuan-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Miles1994/siyuan-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "siyuan",
+    "思源笔记",
+    "notes",
+    "knowledge-base"
+  ]
+}

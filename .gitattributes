@@ -1,0 +1,13 @@
+# Normalise text files to LF in the repository so the project behaves
+# identically regardless of the contributor's platform or core.autocrlf.
+* text=auto eol=lf
+
+# Keep binary assets untouched.
+*.png binary
+*.jpg binary
+*.ico binary
+*.tgz binary
+
+# Windows scripts must keep CRLF to run under cmd.exe.
+*.cmd text eol=crlf
+*.bat text eol=crlf
