@@ -2,7 +2,7 @@
 
 把 [思源笔记](https://b3log.org/siyuan/)（SiYuan）接入任何 MCP 客户端——Claude Desktop、Cursor、Cline、DeepSeek Harness 等。装上后，你的 agent 就能直接**搜索、读取和写入**思源里的笔记本、文档与内容块。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Node: 20%2B](https://img.shields.io/badge/Node-20%2B-339933.svg)](https://nodejs.org)
+[![npm version](https://img.shields.io/npm/v/siyuan-note-mcp?color=cb3837&logo=npm&label=npm)](https://www.npmjs.com/package/siyuan-note-mcp) [![npm downloads](https://img.shields.io/npm/dm/siyuan-note-mcp?color=cb3837&label=downloads)](https://www.npmjs.com/package/siyuan-note-mcp) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Node: 20%2B](https://img.shields.io/badge/Node-20%2B-339933.svg)](https://nodejs.org)
 
 ## 特性
 
@@ -16,18 +16,66 @@
 
 需要 Node.js ≥ 20，且思源笔记正在运行。
 
+免安装，用 `npx` 直接跑：
+
+```bash
+npx -y siyuan-note-mcp
+```
+
+或全局安装：
+
+```bash
+npm install -g siyuan-note-mcp
+siyuan-note-mcp
+```
+
+> **注意**：npm 上已有的 `siyuan-mcp` 是**另一个项目**，本包名是 `siyuan-note-mcp`。
+
+开发或想改代码时，从源码构建：
+
 ```bash
 git clone https://github.com/Miles1994/siyuan-mcp.git
 cd siyuan-mcp
 npm install && npm run build
 ```
 
-> 尚未发布到 npm。**必须执行 `npm run build`**——仓库不包含 `lib/` 构建产物，不构建就没有可运行的文件。
-> 发布后可直接用 `npx -y siyuan-note-mcp` 替代。**注意**：npm 上已有的 `siyuan-mcp` 是另一个项目，本包名是 `siyuan-note-mcp`。
+> 从源码运行**必须执行 `npm run build`**——仓库不包含 `lib/` 构建产物，不构建就没有可运行的文件。（npm 上发布的包里已经带好了 `lib/`。）
 
 ## 客户端配置
 
-把下面这段加进 MCP 客户端配置，`args` 换成你的实际路径（Windows 下用正斜杠 `/`）：
+### 推荐：npx 免安装
+
+```jsonc
+{
+  "mcpServers": {
+    "siyuan": {
+      "command": "npx",
+      "args": ["-y", "siyuan-note-mcp"]
+    }
+  }
+}
+```
+
+连接远程或开启鉴权的内核时，再加环境变量：
+
+```jsonc
+{
+  "mcpServers": {
+    "siyuan": {
+      "command": "npx",
+      "args": ["-y", "siyuan-note-mcp"],
+      "env": {
+        "SIYUAN_API_URL": "http://192.168.1.5:6806",
+        "SIYUAN_TOKEN": "你的 API token"
+      }
+    }
+  }
+}
+```
+
+### 从源码运行
+
+把 `args` 换成你 clone 下来的实际路径（Windows 下用正斜杠 `/`）：
 
 ```jsonc
 {
@@ -40,24 +88,9 @@ npm install && npm run build
 }
 ```
 
-连接远程或开启鉴权的内核时，再加环境变量：
-
-```jsonc
-{
-  "mcpServers": {
-    "siyuan": {
-      "command": "node",
-      "args": ["/path/to/siyuan-mcp/lib/cli.js"],
-      "env": {
-        "SIYUAN_API_URL": "http://192.168.1.5:6806",
-        "SIYUAN_TOKEN": "你的 API token"
-      }
-    }
-  }
-}
-```
-
 API token 在思源的 **设置 → 关于** 里查看。
+
+> **Windows 上用 npx 报 spawn ENOENT**：部分客户端不解析 `npx.cmd` 包装。把 `command` 改为 `cmd`、`args` 改为 `["/c", "npx", "-y", "siyuan-note-mcp"]` 即可。
 
 ## 配置项
 
@@ -111,12 +144,14 @@ DSH 通过 [`@deepseek-ai/dsh-mcp-client`](https://www.npmjs.com/package/@deepse
 装了 [`dsh-skill-mcp-panel`](https://www.npmjs.com/package/dsh-skill-mcp-panel) 的话，该文件中的 MCP 区块由它托管，**不要手改区块内内容**（会被覆盖），改用它的 CLI：
 
 ```bash
-dsh-panel mcp add --name siyuan --stdio --command node \
-  --args "/path/to/siyuan-mcp/lib/cli.js" --profile web
+dsh-panel mcp add --name siyuan --stdio --command npx \
+  --args -y --args siyuan-note-mcp --profile web
 
 dsh-panel mcp test siyuan --profile web     # 验证连通性
 dsh-panel mcp list --profile web            # 查看启用状态
 ```
+
+> `--args` 每次只吃一个值，多个参数要重复写；`mcp` 子命令必须显式给 `--profile`。
 
 否则手动插入这段（`cordis.patch.yml` 顶层是一个数组）：
 
@@ -127,9 +162,10 @@ dsh-panel mcp list --profile web            # 查看启用状态
       config:
         serverName: siyuan
         transport: stdio
-        command: node
+        command: npx
         args:
-          - /path/to/siyuan-mcp/lib/cli.js
+          - "-y"
+          - siyuan-note-mcp
         env:
           SIYUAN_API_URL: http://127.0.0.1:6806
         cwd: ""
@@ -152,6 +188,19 @@ npm run typecheck  # 类型检查
 ```bash
 npx vitest run tests/e2e.spec.ts
 ```
+
+## 发布（维护者）
+
+`package.json` 里的 `publishConfig` 已把发布目标钉在 `registry.npmjs.org`——本机 npm 源即使配成镜像站也不会发错地方。
+
+```bash
+npm login --registry=https://registry.npmjs.org   # 首次
+npm test && npm run typecheck                     # 先过测试
+npm version patch                                 # 或 minor / major
+npm publish                                       # prepare 钩子会自动构建 lib/
+```
+
+发布前建议先 `npm pack --dry-run` 确认打包内容（应只有 `lib/`、`README.md`、`LICENSE`、`package.json`，共 8 个文件）。
 
 ## 许可
 
