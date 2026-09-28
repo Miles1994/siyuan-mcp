@@ -193,14 +193,45 @@ npx vitest run tests/e2e.spec.ts
 
 `package.json` 里的 `publishConfig` 已把发布目标钉在 `registry.npmjs.org`——本机 npm 源即使配成镜像站也不会发错地方。
 
+**npm 现在强制要求发布者启用 2FA**，账号没 2FA 时 `npm publish` 会直接 403：
+
+```
+Two-factor authentication or granular access token with bypass 2fa enabled is required to publish packages.
+```
+
+注意：`npm login` 拿到的登录 token **不能**发布，必须走下面两条之一。
+
+**A. 交互发布** — 在 https://www.npmjs.com/settings/~/tfa 启用 Authenticator app（TOTP），然后每次发布带上当次的验证码：
+
 ```bash
-npm login --registry=https://registry.npmjs.org   # 首次
-npm test && npm run typecheck                     # 先过测试
-npm version patch                                 # 或 minor / major
-npm publish                                       # prepare 钩子会自动构建 lib/
+npm publish --otp=<6 位验证码>
+```
+
+**B. 自动化发布** — 在 https://www.npmjs.com/settings/~/tokens 建 Granular Access Token，权限给 `Read and write`，并**勾选 Bypass 2FA**，用环境变量传入（不要写进 `.npmrc` 提交）：
+
+```bash
+# macOS / Linux
+NPM_TOKEN=npm_xxx npm publish "--//registry.npmjs.org/:_authToken=$NPM_TOKEN"
+```
+
+```powershell
+# Windows PowerShell
+$env:NPM_TOKEN = 'npm_xxx'
+npm publish "--//registry.npmjs.org/:_authToken=$env:NPM_TOKEN"
+```
+
+完整流程：
+
+```bash
+npm test && npm run typecheck   # 先过测试
+npm version patch               # 或 minor / major
+npm publish --otp=<验证码>       # prepare 钩子会自动构建 lib/
 ```
 
 发布前建议先 `npm pack --dry-run` 确认打包内容（应只有 `lib/`、`README.md`、`LICENSE`、`package.json`，共 8 个文件）。
+
+> 长期建议迁到 [trusted publishing (OIDC)](https://docs.npmjs.com/trusted-publishers)：npm 计划从 2027 年 1 月起收紧 Bypass-2FA token 的直接发布能力。
+> npm 页面上的 README 取自发布时的 tarball，改完 README 要发新版本才会同步。
 
 ## 许可
 
